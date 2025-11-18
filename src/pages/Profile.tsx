@@ -1,51 +1,108 @@
-import { useState } from "react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { User, Package, Heart, Settings, LogOut } from "lucide-react";
+import { useUser, Order } from "@/hooks/User";
+
+interface UserData {
+  id: string;
+  email: string;
+  fio: string;
+  phone_number: string;
+  role: string;
+  role_id: number;
+}
 
 const Profile = () => {
-  const [userData] = useState({
-    name: "Иван Петров",
-    email: "ivan@example.com",
-    phone: "+7 (999) 123-45-67"
-  });
-
-  const orders = [
-    {
-      id: "ORD-001",
-      date: "15.01.2025",
-      status: "Доставлен",
-      total: 23500,
-      items: 3
-    },
-    {
-      id: "ORD-002",
-      date: "10.01.2025",
-      status: "В пути",
-      total: 15000,
-      items: 1
-    }
-  ];
+  const [userProfile, setUserProfile] = useState<UserData | null>(null);
+  const [userOrders, setUserOrders] = useState<Order[] | null>(null);
+  const {
+    onMe,
+    onGetOrders,
+    loading: userLoading,
+    error: userError,
+  } = useUser();
 
   const favorites = [
     {
       id: "1",
       name: "Кресло-коляска инвалидная",
       price: 15000,
-      image: "https://images.unsplash.com/photo-1581594549595-35f6edc7b762?w=200&h=200&fit=crop"
+      image:
+        "https://images.unsplash.com/photo-1581594549595-35f6edc7b762?w=200&h=200&fit=crop",
     },
     {
       id: "2",
       name: "Противопролежневый матрас",
       price: 8500,
-      image: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=200&h=200&fit=crop"
-    }
+      image:
+        "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=200&h=200&fit=crop",
+    },
   ];
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const data = await onMe();
+      if (data) {
+        setUserProfile(data as UserData);
+      }
+    };
+    const fetchOrdersData = async () => {
+      // Получение заказов
+      const ordersData = await onGetOrders();
+      if (ordersData) {
+        setUserOrders(ordersData);
+      }
+    };
+    fetchUserData();
+    fetchOrdersData();
+  }, []);
+
+  if (userLoading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <p className="text-xl">Загрузка данных профиля...</p>
+        {/* Здесь можно использовать компонент Spinner */}
+      </main>
+    );
+  }
+
+  if (userError) {
+    return (
+      <main className="min-h-screen flex items-center justify-center text-red-600">
+        <p className="text-xl">Ошибка загрузки профиля: {userError}</p>
+      </main>
+    );
+  }
+
+  const nameValue = userProfile?.fio || "";
+  const emailValue = userProfile?.email || "";
+  const phoneValue = userProfile?.phone_number || "";
+
+  // 3. Функция для форматирования даты (для удобства)
+  const formatDate = (isoString: string) => {
+    try {
+      return new Date(isoString).toLocaleDateString("ru-RU", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    } catch {
+      return "Неизвестная дата";
+    }
+  };
+
+  // 4. Обработка состояния, когда заказов нет
+  const ordersToDisplay = userOrders || [];
 
   return (
     <>
@@ -84,15 +141,15 @@ const Profile = () => {
                 <CardContent className="space-y-6">
                   <div className="space-y-2">
                     <Label htmlFor="name">Имя</Label>
-                    <Input id="name" defaultValue={userData.name} />
+                    <Input id="name" defaultValue={nameValue} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" defaultValue={userData.email} />
+                    <Input id="email" type="email" defaultValue={emailValue} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Телефон</Label>
-                    <Input id="phone" type="tel" defaultValue={userData.phone} />
+                    <Input id="phone" type="tel" defaultValue={phoneValue} />
                   </div>
                   <Button>Сохранить изменения</Button>
                 </CardContent>
@@ -102,25 +159,39 @@ const Profile = () => {
             <TabsContent value="orders">
               <div className="space-y-4">
                 <h2 className="text-2xl font-semibold mb-4">История заказов</h2>
-                {orders.map((order) => (
+                {ordersToDisplay.map((order) => (
                   <Card key={order.id} className="hover-lift card-shadow">
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-semibold text-lg">Заказ {order.id}</p>
-                          <p className="text-sm text-muted-foreground">{order.date}</p>
-                          <p className="text-sm mt-2">Товаров: {order.items}</p>
+                          <p className="font-semibold text-lg">
+                            Заказ {order.id.substring(0, 8).toUpperCase()}...
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {/* Отображаем отформатированную дату создания */}
+                            {formatDate(order.created_at)}
+                          </p>
+                          <p className="text-sm mt-2">
+                            {/* Считаем количество товаров в заказе */}
+                            Товаров: {order.items.length}
+                          </p>
                         </div>
                         <div className="text-right">
-                          <span className={`inline-block px-3 py-1 rounded-full text-sm ${
-                            order.status === "Доставлен" 
-                              ? "bg-green-100 text-green-700" 
-                              : "bg-blue-100 text-blue-700"
-                          }`}>
-                            {order.status}
+                          <span
+                            className={`inline-block px-3 py-1 rounded-full text-sm ${
+                              order.status === "completed" // Проверяем статус из бэкенда
+                                ? "bg-green-100 text-green-700"
+                                : "bg-blue-100 text-blue-700" // Предполагаем другие статусы
+                            }`}
+                          >
+                            {/* Простая маппинг статусов */}
+                            {order.status === "completed"
+                              ? "Доставлен"
+                              : order.status}
                           </span>
                           <p className="text-xl font-bold text-primary mt-2">
-                            {order.total.toLocaleString("ru-RU")} ₽
+                            {/* Отображаем общую цену */}
+                            {order.total_price.toLocaleString("ru-RU")} ₽
                           </p>
                         </div>
                       </div>
@@ -135,7 +206,9 @@ const Profile = () => {
 
             <TabsContent value="favorites">
               <div>
-                <h2 className="text-2xl font-semibold mb-4">Избранные товары</h2>
+                <h2 className="text-2xl font-semibold mb-4">
+                  Избранные товары
+                </h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {favorites.map((item) => (
                     <Card key={item.id} className="hover-lift card-shadow">

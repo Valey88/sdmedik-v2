@@ -3,7 +3,7 @@ import { Mail, Phone, MapPin } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="bg-card border-t mt-20">
+    <footer className="bg-teal-900 border-t mt-20">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <Link to="/" className="flex space-x-2">
@@ -17,19 +17,19 @@ const Footer = () => {
               <span className="text-white font-bold text-xl">S</span>
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900">SdMedik</h3>
-              <p className="text-xs text-gray-600 w-50">
+              <h3 className="text-xl font-bold text-white">SdMedik</h3>
+              <p className="text-xs text-white w-50">
                 Медтехника по социальному сертификату
               </p>
             </div>
           </Link>
           <div>
-            <h3 className="font-semibold mb-4">Навигация</h3>
+            <h3 className="font-semibold mb-4 text-white">Навигация</h3>
             <ul className="space-y-2">
               <li>
                 <Link
                   to="/catalog"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  className="text-sm text-white hover:text-teal-500 transition-colors"
                 >
                   Каталог
                 </Link>
@@ -37,7 +37,7 @@ const Footer = () => {
               <li>
                 <Link
                   to="/about"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  className="text-sm text-white hover:text-teal-500  transition-colors"
                 >
                   О компании
                 </Link>
@@ -45,7 +45,7 @@ const Footer = () => {
               <li>
                 <Link
                   to="/contacts"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  className="text-sm text-white hover:text-teal-500  transition-colors"
                 >
                   Контакты
                 </Link>
@@ -54,12 +54,12 @@ const Footer = () => {
           </div>
 
           <div>
-            <h3 className="font-semibold mb-4">Информация</h3>
+            <h3 className="font-semibold mb-4 text-white">Информация</h3>
             <ul className="space-y-2">
               <li>
                 <Link
                   to="/delivery"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  className="text-sm text-white hover:text-teal-500  transition-colors"
                 >
                   Доставка и оплата
                 </Link>
@@ -67,7 +67,7 @@ const Footer = () => {
               <li>
                 <Link
                   to="/returns"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  className="text-sm text-white hover:text-teal-500  transition-colors"
                 >
                   Возврат и гарантия
                 </Link>
@@ -75,7 +75,7 @@ const Footer = () => {
               <li>
                 <Link
                   to="/certificates"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  className="text-sm text-white hover:text-teal-500  transition-colors"
                 >
                   Сертификаты
                 </Link>
@@ -84,25 +84,25 @@ const Footer = () => {
           </div>
 
           <div>
-            <h3 className="font-semibold mb-4">Контакты</h3>
+            <h3 className="font-semibold mb-4 text-white">Контакты</h3>
             <ul className="space-y-3">
-              <li className="flex items-center text-sm text-muted-foreground">
-                <Phone className="h-4 w-4 mr-2 text-primary" />
+              <li className="flex items-center text-sm text-white">
+                <Phone className="h-4 w-4 mr-2 text-white" />
                 +7 (903) 086-30-91
               </li>
-              <li className="flex items-center text-sm text-muted-foreground">
-                <Phone className="h-4 w-4 mr-2 text-primary" />
+              <li className="flex items-center text-sm text-white">
+                <Phone className="h-4 w-4 mr-2 text-white" />
                 +7 (353) 293-52-41
               </li>
-              <li className="flex items-center text-sm text-muted-foreground">
-                <Mail className="h-4 w-4 mr-2 text-primary" />
+              <li className="flex items-center text-sm text-white">
+                <Mail className="h-4 w-4 mr-2 text-white" />
                 info@SdMedik.ru
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
+        <div className="border-t mt-8 pt-8 text-center text-sm text-white">
           <p>© 2025 SdMedik. Все права защищены.</p>
         </div>
       </div>

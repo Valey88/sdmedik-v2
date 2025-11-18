@@ -1,7 +1,10 @@
 import LayoutWrapper from "@/components/LayoutWrapper";
 import Blog from "@/pages/Blog";
+import CertificatePage from "@/pages/CertificatePage";
+import DeliveryPage from "@/pages/Delivery";
 import Home from "@/pages/Home";
 import Profile from "@/pages/Profile";
+import ReturnPage from "@/pages/Return";
 // import React, { useEffect, useState } from "react"; // Импортируйте React
 import { createBrowserRouter } from "react-router-dom"; // Убедитесь, что импортируете правильно
 // import HomePage from "../pages/home/HomePage";
@@ -101,13 +104,13 @@ export const router = createBrowserRouter([
     element: <LayoutWrapper />, // общий layout
     children: [
       { path: "/", element: <Home /> },
-      // { path: "/certificate", element: <Certificate /> },
+      { path: "/certificate", element: <CertificatePage /> },
       { path: "/blog", element: <Blog /> },
       { path: "/profile", element: <Profile /> },
 
-      // { path: "/returnpolicy", element: <ReturnPolicy /> },
+      { path: "/return", element: <ReturnPage /> },
       // { path: "/catalog", element: <Catalog /> },
-      // { path: "/about", element: <About /> },
+      { path: "/delivery", element: <DeliveryPage /> },
       // { path: "/contacts", element: <Contacts /> },
       // // остальные маршруты...
     ],

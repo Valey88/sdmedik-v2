@@ -6,6 +6,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import api from "@/config/Config";
 import useAuthStore from "@/store/useAuthStore";
+import { useUser } from "./User";
 
 interface LoginFormValues {
   email: string;
@@ -65,7 +66,7 @@ export const useAuth = (): UseAuthReturn => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const { onMe } = useUser();
   // ===== Форма логина =====
   const {
     register: registerLogin,
@@ -98,14 +99,8 @@ export const useAuth = (): UseAuthReturn => {
       if (res.data.status === "success") {
         // Бэкенд установил httpOnly куки.
         toast.success("Вы успешно вошли!");
-
-        // Теперь получаем данные пользователя, чтобы обновить Zustand Store
-        // const userRes = await api.get<any>("/auth/me"); // Или данные могут прийти в ответе на /auth/login
-
-        // if (userRes.data) {
-        //   useAuthStore.getState().setUser(userRes.data);
-        //   useAuthStore.getState().setAuthenticated(true);
-        // }
+        onMe();
+        localStorage.setItem("user", JSON.stringify());
 
         navigate("/profile");
       }
