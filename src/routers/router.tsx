@@ -22,6 +22,8 @@ import { createBrowserRouter } from "react-router-dom"; // Убедитесь, �
 import { Navigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { PropsWithChildren } from "react";
+import CategoryCatalog from "@/pages/CategoryCatalog";
+import CategoryPage from "@/pages/CategoryPage";
 // import CreateProduct from "../pages/admin/create_product/CreateProduct";
 // import Contacts from "../pages/contacts/Contacts";
 // import CreateCategory from "../pages/admin/create_category/CreateCategory";
@@ -109,13 +111,14 @@ export const router = createBrowserRouter([
         path: "/profile",
         element: (
           <UsersRoute>
-            <Profile  />
+            <Profile />
           </UsersRoute>
         ),
       },
 
       { path: "/return", element: <ReturnPage /> },
-      // { path: "/catalog", element: <Catalog /> },
+      { path: "/catalog", element: <CategoryCatalog /> },
+      { path: "/products/:id", element: <CategoryPage /> },
       { path: "/delivery", element: <DeliveryPage /> },
       // { path: "/contacts", element: <Contacts /> },
       // // остальные маршруты...
