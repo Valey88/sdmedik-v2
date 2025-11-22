@@ -1,9 +1,11 @@
+// src/config/Config.ts
 import axios, {
   AxiosError,
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
 import useAuthStore from "@/store/useAuthStore";
+
 // Типы для очереди failed запросов
 interface FailedQueueItem {
   resolve: (value?: unknown) => void;
@@ -15,99 +17,96 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
 
-// Environment variables с проверкой типов
-const url = import.meta.env.VITE_URL_SERVER;
+export const url = import.meta.env.VITE_URL_SERVER;
 export const urlPictures = import.meta.env.VITE_URL_PICTURES;
 
-// Создаем экземпляр axios
 const api = axios.create({
   baseURL: `${url}`,
-  withCredentials: true,
+  withCredentials: true, // Критично для HttpOnly cookies
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Состояние для обработки refresh token
+// Флаг, чтобы не спамить запросами на рефреш
 let isRefreshing = false;
 let failedQueue: FailedQueueItem[] = [];
 
 /**
- * Обработка очереди failed запросов
+ * Обрабатывает очередь запросов после попытки рефреша
  */
-const processQueue = (
-  error: unknown | null,
-  token: string | null = null
-): void => {
+const processQueue = (error: Error | null = null): void => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
-      prom.resolve(token);
+      prom.resolve();
     }
   });
-
-  // Очищаем очередь
   failedQueue = [];
 };
 
-// Интерцептор ответов
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as CustomAxiosRequestConfig;
 
-    // Если нет конфига или ответа, просто отклоняем ошибку
-    if (!originalRequest || !error.response) {
+    // Если ошибки нет в респонсе (например, сеть упала), просто реджектим
+    if (!error.response) {
       return Promise.reject(error);
     }
 
-    // Если ошибка 401 (Unauthorized)
+    // Ловим 401
     if (error.response.status === 401 && !originalRequest._retry) {
-      // 1. Если это запрос на refresh token - выход
-      if (originalRequest.url?.includes("/auth/refresh")) {
-        await useAuthStore.getState().logout();
+      // Если ошибка пришла от самого запроса рефреша или логина — не пытаемся рефрешить снова
+      if (
+        originalRequest.url?.includes("/auth/refresh") ||
+        originalRequest.url?.includes("/auth/login")
+      ) {
         return Promise.reject(error);
       }
 
-      // 2. Помечаем, что этот запрос уже был "повторен"
+      // Помечаем запрос как повторный
       originalRequest._retry = true;
 
-      // 3. Запускаем механизм обновления токена
-      if (!isRefreshing) {
-        isRefreshing = true;
-
-        try {
-          // Вызываем обновление токена (обращаемся к актуальному состоянию Store)
-          await useAuthStore.getState().refreshToken();
-
-          // Обновление прошло успешно, обрабатываем очередь
-          isRefreshing = false;
-          processQueue(null);
-        } catch (refreshError) {
-          // Обновление токена не удалось - выходим из системы
-          isRefreshing = false;
-          processQueue(refreshError);
-          // logout() уже вызван внутри refreshToken при ошибке
-          return Promise.reject(refreshError);
-        }
+      if (isRefreshing) {
+        // Если рефреш уже идет, добавляем запрос в очередь
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then(() => {
+            // Когда очередь разрезолвится, повторяем оригинальный запрос
+            return api(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
       }
 
-      // Повторяем оригинальный запрос
-      return new Promise((resolve, reject) => {
-        failedQueue.push({ resolve, reject });
-      })
-        .then(() => {
-          // После успешного рефреша, повторяем оригинальный запрос с новыми куками
-          return api(originalRequest);
-        })
-        .catch((err) => {
-          // Очередь была обработана с ошибкой (например, refresh fail)
-          return Promise.reject(err);
-        });
+      isRefreshing = true;
+
+      try {
+        // Пытаемся обновить токен
+        await useAuthStore.getState().refreshToken();
+
+        // Если успешно — обрабатываем очередь
+        processQueue(null);
+
+        // И повторяем сам запрос, который вызвал 401
+        return api(originalRequest);
+      } catch (refreshError) {
+        // Если рефреш не удался (например, refresh token протух)
+        processQueue(refreshError as Error);
+
+        // Разлогиниваем пользователя
+        await useAuthStore.getState().logout();
+
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
     }
 
-    // Возвращаем все остальные ошибки
     return Promise.reject(error);
   }
 );

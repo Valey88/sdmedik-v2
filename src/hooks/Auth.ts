@@ -99,8 +99,16 @@ export const useAuth = (): UseAuthReturn => {
       if (res.data.status === "success") {
         // Бэкенд установил httpOnly куки.
         toast.success("Вы успешно вошли!");
-        onMe();
-        localStorage.setItem("user", JSON.stringify());
+        const userData = await onMe(); // <-- Ждем результат от onMe
+
+        // 3. Если данные получены, сохраняем их
+        if (userData) {
+          // Сохраняем в localStorage для восстановления сессии после перезагрузки
+          localStorage.setItem("user", JSON.stringify(userData));
+
+          // Обновляем глобальное состояние (Zustand)
+          useAuthStore.getState().login(userData);
+        }
 
         navigate("/profile");
       }
@@ -179,6 +187,7 @@ export const useAuth = (): UseAuthReturn => {
   };
 
   const onLogout = async () => {
+    localStorage.removeItem("user");
     await useAuthStore.getState().logout();
     navigate("/login");
   };

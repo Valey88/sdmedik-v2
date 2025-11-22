@@ -19,8 +19,9 @@ import { createBrowserRouter } from "react-router-dom"; // Убедитесь, �
 // import Register from "../pages/account/Register";
 // import UserAccount from "../pages/account/UserAccount";
 // import Electronic_certificate from "../pages/electronic_certificate/Electronic_certificate";
-// import { Navigate } from "react-router-dom";
-// import Cookies from "js-cookie";
+import { Navigate } from "react-router-dom";
+import Cookies from "js-cookie";
+import { PropsWithChildren } from "react";
 // import CreateProduct from "../pages/admin/create_product/CreateProduct";
 // import Contacts from "../pages/contacts/Contacts";
 // import CreateCategory from "../pages/admin/create_category/CreateCategory";
@@ -62,16 +63,14 @@ import { createBrowserRouter } from "react-router-dom"; // Убедитесь, �
 //   return isAdmin() ? children : <Navigate to="/" replace />;
 // };
 
-// const UsersRoute = ({ children }) => {
-//   const isLoggedIn = Cookies.get("logged_in") === "true";
+const UsersRoute = ({ children }: PropsWithChildren) => {
+  const isLoggedIn = Cookies.get("logged_in") === "true";
 
-//   if (!isLoggedIn) {
-//     return <Navigate to="/" replace />;
-//   }
-//   return children;
-// };
-
-// export default UsersRoute;
+  if (!isLoggedIn) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
 
 // export const AdminRoute = ({ children }) => {
 //   const { getUserInfo, user } = useUserStore();
@@ -106,7 +105,14 @@ export const router = createBrowserRouter([
       { path: "/", element: <Home /> },
       { path: "/certificate", element: <CertificatePage /> },
       { path: "/blog", element: <Blog /> },
-      { path: "/profile", element: <Profile /> },
+      {
+        path: "/profile",
+        element: (
+          <UsersRoute>
+            <Profile  />
+          </UsersRoute>
+        ),
+      },
 
       { path: "/return", element: <ReturnPage /> },
       // { path: "/catalog", element: <Catalog /> },

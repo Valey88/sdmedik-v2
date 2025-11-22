@@ -1,100 +1,141 @@
 // src/store/useAuthStore.ts
 import { create } from "zustand";
 import { toast } from "react-toastify";
-import api from "@/config/Config"; // Используем настроенный Axios
+import api, { url } from "@/config/Config";
+import axios from "axios";
 
+// 1. Расширяем интерфейс User
 interface User {
   id: string;
   email: string;
   fio: string;
-  phone_number:string;
+  phone_number: string;
+  role: "admin" | "user"; // Используем литеральные типы для надежности
+  role_id: 1 | 2;
 }
 
 interface AuthStore {
   isAuthenticated: boolean;
   user: User | null;
   loading: boolean;
+  isAdmin: boolean; // <-- НОВОЕ: Состояние для проверки на админа
 
   // Действия
-  setAuthenticated: (status: boolean) => void;
-  setUser: (user: User | null) => void;
-  Auth: (email: string, password: string) => Promise<void>;
+  login: (user: User) => void; // <-- НОВОЕ: Централизованный метод для входа
   logout: () => Promise<void>;
+  checkAuth: () => Promise<void>;
   refreshToken: () => Promise<void>;
-  checkAuth: () => Promise<void>; // Для проверки аутентификации при загрузке приложения
+  hydrate: () => void; // <-- НОВОЕ: Для быстрой загрузки из localStorage
 }
 
 const useAuthStore = create<AuthStore>((set, get) => ({
+  // Начальные значения
   isAuthenticated: false,
   user: null,
-  loading: true, // Изначально true для проверки аутентификации
+  loading: true, // true, пока не выполнится первая проверка checkAuth
+  isAdmin: false,
 
-  setAuthenticated: (status) => set({ isAuthenticated: status }),
-  setUser: (user) => set({ user }),
-
-  // Логин (используется из useAuth.ts)
-  Auth: async (email, password) => {
-    // Этот метод не будет использоваться напрямую, так как логика в useAuth.ts
-    // Но он остается для совместимости с исходным кодом, если понадобится.
-    // Фактически, логика API будет в useAuth.ts, а здесь - только обновление состояния.
-    // Оставляем пустым или удаляем, если не используется.
+  /**
+   * Централизованный метод для установки состояния аутентификации.
+   * Вызывается после успешного логина или проверки сессии.
+   */
+  login: (userData) => {
+    set({
+      isAuthenticated: true,
+      user: userData,
+      // Главная логика: вычисляем isAdmin один раз здесь
+      isAdmin: userData.role === "admin" && userData.role_id === 1,
+      loading: false,
+    });
   },
 
-  // Выход из системы
+  /**
+   * Выход из системы.
+   */
   logout: async () => {
-    // Удаляем токены на бэкенде (бэкенд должен очистить httpOnly куки)
     try {
+      // Пытаемся выйти на бэкенде (очистить cookie)
       await api.post("/auth/logout");
     } catch (error) {
-      console.error("Ошибка при выходе (возможно, уже вышли):", error);
+      console.error(
+        "Ошибка при выходе (возможно, сессия уже недействительна):",
+        error
+      );
     } finally {
-      set({ isAuthenticated: false, user: null });
-      // Внешний код (например, компонент) должен будет перенаправить пользователя
+      // Сбрасываем все состояния в начальные значения
+      set({
+        isAuthenticated: false,
+        user: null,
+        isAdmin: false,
+        loading: false,
+      });
+      localStorage.removeItem("user"); // Очищаем localStorage
       toast.info("Вы вышли из системы.");
     }
   },
 
-  // Обновление токена (используется только в Axios Interceptor)
-  refreshToken: async () => {
+  /**
+   * Проверка сессии с бэкендом.
+   * Вызывается при загрузке приложения для подтверждения валидности сессии.
+   */
+  checkAuth: async () => {
     try {
-      // Axios автоматически отправит httpOnly Refresh Token из куки
-      const response = await api.post("/auth/refresh");
+      // Если loading уже false (из-за hydrate), не показываем лоадер снова
+      if (!get().loading) set({ loading: true });
 
-      // Бэкенд должен ответить успехом и установить новые httpOnly куки с Access и Refresh токенами
-      if (response.status === 200) {
-        get().setAuthenticated(true);
-        // Обычно после рефреша мы не получаем данные пользователя,
-        // но можем вызвать checkAuth для получения актуальных данных
-        await get().checkAuth();
+      const response = await api.get<User>("/auth/me");
+
+      if (response.data) {
+        // Используем наш центральный метод `login`
+        get().login(response.data);
+        // Синхронизируем localStorage
+        localStorage.setItem("user", JSON.stringify(response.data));
       } else {
-        throw new Error("Не удалось обновить токен");
+        // Если ответа нет, но ошибки не было, выходим из системы
+        await get().logout();
       }
     } catch (error) {
-      console.error("Ошибка обновления токена:", error);
-      // Если рефреш не удался, мы должны выйти из системы
+      // Любая ошибка (401, 500, сеть) означает, что пользователь не авторизован
+      console.error("Проверка аутентификации не удалась:", error);
       await get().logout();
-      throw error; // Прокидываем ошибку, чтобы Interceptor знал о провале
+    } finally {
+      set({ loading: false });
     }
   },
 
-  // Проверка аутентификации при загрузке приложения
-  checkAuth: async () => {
-    set({ loading: true });
-    try {
-      // Этот запрос использует Access Token из куки. Если он невалиден,
-      // сработает Interceptor, вызовет refreshToken и повторит этот запрос.
-      const response = await api.get<User>("/auth/me");
+  refreshToken: async () => {
+    // Важно: здесь мы делаем запрос.
+    // Так как куки HttpOnly, мы просто делаем POST запрос,
+    // а сервер сам обновит set-cookie в ответе.
 
-      if (response.status === 200 && response.data) {
-        set({ isAuthenticated: true, user: response.data });
-      } else {
-        set({ isAuthenticated: false, user: null });
+    // Мы используем axios.create(), чтобы создать "чистый" инстанс
+    // без наших интерцепторов, чтобы избежать бесконечного цикла,
+    // если вдруг сам /refresh вернет 401.
+    const refreshApi = axios.create({
+      baseURL: url,
+      withCredentials: true, // Обязательно для отправки текущих кук
+    });
+
+    await refreshApi.post("/auth/refresh");
+  },
+
+  /**
+   * Мгновенное восстановление состояния из localStorage.
+   * Убирает "моргание" интерфейса при перезагрузке страницы.
+   */
+  hydrate: () => {
+    try {
+      const userString = localStorage.getItem("user");
+      if (userString) {
+        const userData = JSON.parse(userString) as User;
+        // Устанавливаем состояние немедленно, не дожидаясь ответа от сервера
+        get().login(userData);
       }
-    } catch (error) {
-      // Ошибка (401) уже обработана Interceptor'ом и привела к logout,
-      // или это другая ошибка (500, сеть и т.д.).
-      set({ isAuthenticated: false, user: null });
+    } catch (e) {
+      console.error("Не удалось восстановить сессию из localStorage", e);
+      // Если в localStorage мусор, просто ничего не делаем
     } finally {
+      // В любом случае, начальная загрузка завершена
       set({ loading: false });
     }
   },

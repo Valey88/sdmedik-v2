@@ -1,17 +1,17 @@
 import { Link } from "react-router-dom";
-import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { Menu, ChevronDown, Search } from "lucide-react";
+import { Menu, ChevronDown, } from "lucide-react";
+import { SearchBox } from "./SearchBox";
 
 const HeaderSearchCatalog = () => {
   return (
     <div className="w-full flex flex-col items-center gap-4 mt-2">
-
-      {/* Catalog button — mobile версия */}
+      {/* === MOBILE VERSION === */}
+      {/* Кнопка каталога */}
       <Link to="/catalog" className="w-full md:hidden">
         <Button
           variant="default"
-          className="w-full flex justify-center gap-2"
+          className="w-full flex justify-center gap-2 font-semibold"
         >
           <Menu size={18} />
           Каталог
@@ -19,46 +19,24 @@ const HeaderSearchCatalog = () => {
         </Button>
       </Link>
 
-      {/* Search — mobile версия */}
-      <div className="flex md:hidden w-full relative">
-        <Input
-          type="text"
-          placeholder="Поиск товаров..."
-          className="w-full p-4"
-        />
-        <Button
-          size="icon"
-          variant="ghost"
-          className="absolute right-0 top-0 h-full"
-        >
-          <Search size={20} />
-        </Button>
+      {/* Поиск (Мобильный) */}
+      <div className="flex md:hidden w-full">
+        <SearchBox />
       </div>
 
-      {/* Desktop — остаётся прежним */}
+      {/* === DESKTOP VERSION === */}
       <div className="hidden md:flex items-center justify-center gap-4 w-full">
-
-        <Link to="/catalog" className="hidden lg:block">
-          <Button variant="default" className="gap-2">
+        <Link to="/catalog" className="hidden lg:block flex-shrink-0">
+          <Button variant="default" className="gap-2 px-6 font-semibold">
             <Menu size={18} />
             Каталог
             <ChevronDown size={16} />
           </Button>
         </Link>
 
-        <div className="hidden md:flex flex-1 max-w-2xl relative">
-          <Input
-            type="text"
-            placeholder="Поиск товаров..."
-            className="p-5"
-          />
-          <Button
-            size="icon"
-            variant="ghost"
-            className="absolute right-0 top-0 h-full"
-          >
-            <Search size={20} />
-          </Button>
+        {/* Поиск (Десктоп) */}
+        <div className="hidden md:flex flex-1 max-w-2xl">
+          <SearchBox />
         </div>
       </div>
     </div>

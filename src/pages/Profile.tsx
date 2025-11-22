@@ -112,19 +112,34 @@ const Profile = () => {
 
           <Tabs defaultValue="profile" className="w-full">
             <TabsList className="grid w-full grid-cols-4 mb-8">
-              <TabsTrigger value="profile">
+              <TabsTrigger
+                value="profile"
+                className="data-[state=active]:text-white" // Добавили класс здесь
+              >
                 <User className="h-4 w-4 mr-2" />
                 Профиль
               </TabsTrigger>
-              <TabsTrigger value="orders">
+
+              <TabsTrigger
+                value="orders"
+                className="data-[state=active]:text-white" // И здесь
+              >
                 <Package className="h-4 w-4 mr-2" />
                 Мои заказы
               </TabsTrigger>
-              <TabsTrigger value="favorites">
+
+              <TabsTrigger
+                value="favorites"
+                className="data-[state=active]:text-white" // И здесь
+              >
                 <Heart className="h-4 w-4 mr-2" />
                 Избранное
               </TabsTrigger>
-              <TabsTrigger value="settings">
+
+              <TabsTrigger
+                value="settings"
+                className="data-[state=active]:text-white" // И здесь
+              >
                 <Settings className="h-4 w-4 mr-2" />
                 Настройки
               </TabsTrigger>

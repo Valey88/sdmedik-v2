@@ -155,7 +155,7 @@ const UserAuthSheet = ({ children }: { children: React.ReactNode }) => {
                 value="login"
                 className={`rounded-lg font-medium text-sm transition-all ${
                   tab === "login"
-                    ? "bg-teal-500 text-teal-600 shadow"
+                    ? "bg-teal-500 text-white shadow"
                     : "text-gray-600 hover:text-teal-600"
                 }`}
               >
@@ -165,7 +165,7 @@ const UserAuthSheet = ({ children }: { children: React.ReactNode }) => {
                 value="register"
                 className={`rounded-lg font-medium text-sm transition-all ${
                   tab === "register"
-                    ? "bg-white text-teal-600 shadow"
+                    ? "bg-white text-white shadow"
                     : "text-gray-600 hover:text-teal-600"
                 }`}
               >

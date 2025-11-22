@@ -1,8 +1,8 @@
 // src/hooks/useUser.ts
 
 import api from "@/config/Config";
+import useAuthStore from "@/store/useAuthStore";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Не используется, но оставляем
 import { toast } from "react-toastify";
 
 interface User {
@@ -10,8 +10,8 @@ interface User {
   email: string;
   fio: string;
   phone_number: string;
-  role: string;
-  role_id: number;
+  role: "admin" | "user";
+  role_id: 1 | 2;
 }
 
 // Интерфейс для элемента в заказе
@@ -52,11 +52,8 @@ interface UserReturn {
 }
 
 export const useUser = (): UserReturn => {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  
 
   // 3. ИСПРАВЛЕНИЕ: Удален ненужный аргумент data: User
   const onMe = async (): Promise<User | undefined> => {
@@ -68,13 +65,20 @@ export const useUser = (): UserReturn => {
       const res = await api.get<{ data: User }>("/user/me");
 
       // Возвращаем данные пользователя
-      return res.data.data;
+
+      const userData: User = res.data.data || res.data;
+
+      if (userData) {
+        return userData;
+      }
     } catch (err: any) {
       console.error("Ошибка получения данных о пользователе:", err);
       toast.error(
         err.response?.data?.message || "Ошибка получения данных о пользователе"
       );
       setError(err.response?.data?.message || err.message);
+      localStorage.removeItem("user");
+      useAuthStore.getState().logout();
 
       // При ошибке возвращаем undefined
       return undefined;
