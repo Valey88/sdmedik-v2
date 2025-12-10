@@ -1,49 +1,54 @@
 // src/store/useAuthStore.ts
 import { create } from "zustand";
-import { toast } from "react-toastify";
 import api, { url } from "@/config/Config";
 import axios from "axios";
 
-// 1. Расширяем интерфейс User
+// 1. Интерфейс пользователя (соответствует данным из БД/Локалстораджа)
 interface User {
   id: string;
   email: string;
   fio: string;
   phone_number: string;
-  role: "admin" | "user"; // Используем литеральные типы для надежности
+  role: "admin" | "user";
   role_id: 1 | 2;
+}
+
+// 2. Интерфейс ответа от API (обертка)
+interface UserResponse {
+  status: string;
+  data: User;
 }
 
 interface AuthStore {
   isAuthenticated: boolean;
   user: User | null;
   loading: boolean;
-  isAdmin: boolean; // <-- НОВОЕ: Состояние для проверки на админа
+  isAdmin: boolean;
 
   // Действия
-  login: (user: User) => void; // <-- НОВОЕ: Централизованный метод для входа
+  login: (user: User) => void;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   refreshToken: () => Promise<void>;
-  hydrate: () => void; // <-- НОВОЕ: Для быстрой загрузки из localStorage
+  hydrate: () => void;
 }
 
 const useAuthStore = create<AuthStore>((set, get) => ({
   // Начальные значения
   isAuthenticated: false,
   user: null,
-  loading: true, // true, пока не выполнится первая проверка checkAuth
+  loading: true,
   isAdmin: false,
 
   /**
-   * Централизованный метод для установки состояния аутентификации.
-   * Вызывается после успешного логина или проверки сессии.
+   * Централизованный метод для установки состояния авторизации.
+   * Вычисляет isAdmin на основе данных пользователя.
    */
   login: (userData) => {
     set({
       isAuthenticated: true,
       user: userData,
-      // Главная логика: вычисляем isAdmin один раз здесь
+      // Проверка прав администратора
       isAdmin: userData.role === "admin" && userData.role_id === 1,
       loading: false,
     });
@@ -54,49 +59,50 @@ const useAuthStore = create<AuthStore>((set, get) => ({
    */
   logout: async () => {
     try {
-      // Пытаемся выйти на бэкенде (очистить cookie)
       await api.post("/auth/logout");
     } catch (error) {
-      console.error(
-        "Ошибка при выходе (возможно, сессия уже недействительна):",
-        error
-      );
+      console.error("Ошибка при выходе:", error);
     } finally {
-      // Сбрасываем все состояния в начальные значения
       set({
         isAuthenticated: false,
         user: null,
         isAdmin: false,
         loading: false,
       });
-      localStorage.removeItem("user"); // Очищаем localStorage
-      toast.info("Вы вышли из системы.");
+      localStorage.removeItem("user");
+      // toast.info("Вы вышли из системы.");
     }
   },
 
   /**
    * Проверка сессии с бэкендом.
-   * Вызывается при загрузке приложения для подтверждения валидности сессии.
+   * Использует /user/me для получения полных данных о пользователе и его роли.
    */
   checkAuth: async () => {
     try {
-      // Если loading уже false (из-за hydrate), не показываем лоадер снова
+      // Если загрузка еще не идет, ставим true
       if (!get().loading) set({ loading: true });
 
-      const response = await api.get<User>("/auth/me");
+      // Запрашиваем данные профиля
+      // Используем any или дженерик, чтобы обработать вложенность data.data
+      const response = await api.get<UserResponse | User>("/user/me");
 
-      if (response.data) {
-        // Используем наш центральный метод `login`
-        get().login(response.data);
-        // Синхронизируем localStorage
-        localStorage.setItem("user", JSON.stringify(response.data));
+      // Нормализация данных: сервер может вернуть { data: User } или просто User
+      // @ts-ignore - игнорируем ошибку типов для гибкости обработки ответа
+      const userData = response.data?.data || response.data;
+
+      if (userData && userData.id) {
+        // Обновляем состояние (здесь же пересчитывается isAdmin)
+        get().login(userData);
+
+        // Обновляем localStorage свежими данными
+        localStorage.setItem("user", JSON.stringify(userData));
       } else {
-        // Если ответа нет, но ошибки не было, выходим из системы
-        await get().logout();
+        throw new Error("Некорректные данные пользователя");
       }
     } catch (error) {
-      // Любая ошибка (401, 500, сеть) означает, что пользователь не авторизован
-      console.error("Проверка аутентификации не удалась:", error);
+      console.error("Проверка авторизации не удалась:", error);
+      // Если проверка не прошла (401 или ошибка), разлогиниваем
       await get().logout();
     } finally {
       set({ loading: false });
@@ -104,39 +110,33 @@ const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   refreshToken: async () => {
-    // Важно: здесь мы делаем запрос.
-    // Так как куки HttpOnly, мы просто делаем POST запрос,
-    // а сервер сам обновит set-cookie в ответе.
-
-    // Мы используем axios.create(), чтобы создать "чистый" инстанс
-    // без наших интерцепторов, чтобы избежать бесконечного цикла,
-    // если вдруг сам /refresh вернет 401.
+    // Создаем чистый инстанс axios чтобы избежать циклических вызовов интерцепторов
     const refreshApi = axios.create({
       baseURL: url,
-      withCredentials: true, // Обязательно для отправки текущих кук
+      withCredentials: true,
     });
 
     await refreshApi.post("/auth/refresh");
   },
 
   /**
-   * Мгновенное восстановление состояния из localStorage.
-   * Убирает "моргание" интерфейса при перезагрузке страницы.
+   * Восстановление сессии из localStorage при загрузке страницы.
+   * Позволяет интерфейсу не "моргать" до завершения checkAuth.
    */
   hydrate: () => {
     try {
       const userString = localStorage.getItem("user");
       if (userString) {
         const userData = JSON.parse(userString) as User;
-        // Устанавливаем состояние немедленно, не дожидаясь ответа от сервера
+        // Сразу устанавливаем пользователя и права админа
         get().login(userData);
       }
     } catch (e) {
-      console.error("Не удалось восстановить сессию из localStorage", e);
-      // Если в localStorage мусор, просто ничего не делаем
+      console.error("Ошибка парсинга localStorage", e);
+      localStorage.removeItem("user");
     } finally {
-      // В любом случае, начальная загрузка завершена
-      set({ loading: false });
+      // Даже если локальных данных нет, loading оставим true,
+      // так как useEffect в App.tsx или AdminLayout вызовет checkAuth
     }
   },
 }));

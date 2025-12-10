@@ -24,6 +24,18 @@ import Cookies from "js-cookie";
 import { PropsWithChildren } from "react";
 import CategoryCatalog from "@/pages/CategoryCatalog";
 import CategoryPage from "@/pages/CategoryPage";
+import AdminLayout from "@/components/admin/AdminLayout";
+import AdminDashboardPage from "@/pages/AdminDashboardPage";
+import ProductListPage from "@/components/admin/product/ProductListPage";
+import ProductCreatePage from "@/components/admin/product/ProductCreatePage";
+import ProductEditPage from "@/components/admin/product/ProductEditPage";
+import CartPage from "@/pages/CartPage";
+import ProductPage from "@/pages/ProductPage";
+import CategoriesListPage from "@/components/admin/category/CategoryListPage";
+import CategoryCreatePage from "@/components/admin/category/CategoryCreatePage";
+import CategoryEditPage from "@/components/admin/category/CategoryEditPage";
+import Payments from "@/pages/Payments";
+import OrdersListPage from "@/components/admin/orders/OrdersListPage";
 // import CreateProduct from "../pages/admin/create_product/CreateProduct";
 // import Contacts from "../pages/contacts/Contacts";
 // import CreateCategory from "../pages/admin/create_category/CreateCategory";
@@ -101,12 +113,23 @@ const UsersRoute = ({ children }: PropsWithChildren) => {
 // };
 
 export const router = createBrowserRouter([
+  // 1. Публичные маршруты (С Хедером и Футером)
   {
-    element: <LayoutWrapper />, // общий layout
+    element: <LayoutWrapper />,
     children: [
       { path: "/", element: <Home /> },
       { path: "/certificate", element: <CertificatePage /> },
       { path: "/blog", element: <Blog /> },
+      { path: "/return", element: <ReturnPage /> },
+      { path: "/catalog", element: <CategoryCatalog /> },
+      { path: "/products/:id", element: <CategoryPage /> },
+      { path: "/delivery", element: <DeliveryPage /> },
+      { path: "/returnpolicy", element: <ReturnPage /> },
+      { path: "/cart", element: <CartPage /> },
+      { path: "/product/:id", element: <ProductPage /> },
+      { path: "/pay", element: <Payments /> },
+
+      // Защищенный маршрут профиля (тоже с хедером/футером)
       {
         path: "/profile",
         element: (
@@ -115,194 +138,58 @@ export const router = createBrowserRouter([
           </UsersRoute>
         ),
       },
-
-      { path: "/return", element: <ReturnPage /> },
-      { path: "/catalog", element: <CategoryCatalog /> },
-      { path: "/products/:id", element: <CategoryPage /> },
-      { path: "/delivery", element: <DeliveryPage /> },
-      // { path: "/contacts", element: <Contacts /> },
-      // // остальные маршруты...
     ],
   },
-  //   {
-  //     path: "/blog-list",
-  //     element: (
-  //       <LayoutWrapper>
-  //         <BlogList />
-  //       </LayoutWrapper>
-  //     ),
-  //   },
-  //   {
-  //     path: "/post/:id",
-  //     element: (
-  //       <LayoutWrapper>
-  //         <Post />
-  //       </LayoutWrapper>
-  //     ),
-  //   },
-  //   {
-  //     path: "/catalog",
-  //     element: (
-  //       <LayoutWrapper>
-  //         <СategoriesPage />
-  //       </LayoutWrapper>
-  //     ),
-  //   },
-  //   {
-  //     path: "/catalog/certificate",
-  //     element: (
-  //       <LayoutWrapper>
-  //         <CategoriesForCertificate />
-  //       </LayoutWrapper>
-  //     ),
-  //   },
-  //   {
-  //     path: "/products/:id", // динамический маршрут
-  //     element: (
-  //       <LayoutWrapper>
-  //         <CatalogsLayout />
-  //       </LayoutWrapper>
-  //     ), // Исправлено имя компонента
-  //   },
-  //   {
-  //     path: "/products/certificate/:id", // динамический маршрут
-  //     element: (
-  //       <LayoutWrapper>
-  //         <CatalogsCertificateLayout />
-  //       </LayoutWrapper>
-  //     ), // Исправлено имя компонента
-  //   },
-  //   {
-  //     path: "/product/certificate/:id", // динамический маршрут
-  //     element: (
-  //       <LayoutWrapper>
-  //         <ProductDynamicCertificatePage />
-  //       </LayoutWrapper>
-  //     ), // Исправлено имя компонента
-  //   },
-  //   {
-  //     path: "/basket", // динамический маршрут
-  //     element: (
-  //       <LayoutWrapper>
-  //         <BasketLayout />
-  //       </LayoutWrapper>
-  //     ), // Исправлено имя компонента
-  //   },
-  //   {
-  //     path: "/delivery", // динамический маршрут
-  //     element: (
-  //       <LayoutWrapper>
-  //         <Delivery />
-  //       </LayoutWrapper>
-  //     ), // Исправлено имя компонента
-  //   },
-  //   {
-  //     path: "/about", // динамический маршрут
-  //     element: (
-  //       <LayoutWrapper>
-  //         <About />
-  //       </LayoutWrapper>
-  //     ), // Исправлено имя компонента
-  //   },
-  //   {
-  //     path: "/returnpolicy", // динамический маршрут
-  //     element: (
-  //       <LayoutWrapper>
-  //         <Return_policy />
-  //       </LayoutWrapper>
-  //     ), // Исправлено имя компонента
-  //   },
-  //   {
-  //     path: "/deteils", // динамический маршрут
-  //     element: (
-  //       <LayoutWrapper>
-  //         <Deteils />
-  //       </LayoutWrapper>
-  //     ), // Исправлено имя компонента
-  //   },
-  //   {
-  //     path: "/certificate", // динамический маршрут
-  //     element: (
-  //       <LayoutWrapper>
-  //         <Electronic_certificate />
-  //       </LayoutWrapper>
-  //     ), // Исправлено имя компонента
-  //   },
-  //   {
-  //     path: "/contacts", // динамический маршрут
-  //     element: (
-  //       <LayoutWrapper>
-  //         <Contacts />
-  //       </LayoutWrapper>
-  //     ), // Исправлено имя компонента
-  //   },
 
-  //   {
-  //     path: "/auth",
-  //     element: (
-  //       <LayoutWrapper>
-  //         <Auth />
-  //       </LayoutWrapper>
-  //     ),
-  //   },
-  //   {
-  //     path: "/register",
-  //     element: (
-  //       <LayoutWrapper>
-  //         <Register />
-  //       </LayoutWrapper>
-  //     ),
-  //   },
-  //   {
-  //     path: "/paymants",
-  //     element: (
-  //       <LayoutWrapper>
-  //         <Paymants />
-  //       </LayoutWrapper>
-  //     ),
-  //   },
-  //   {
-  //     path: "/paymants/:id",
-  //     element: (
-  //       <LayoutWrapper>
-  //         <PayOnclick />
-  //       </LayoutWrapper>
-  //     ),
-  //   },
-  //   {
-  //     path: "/reset-password",
-  //     element: (
-  //       <LayoutWrapper>
-  //         <RessetPassword />
-  //       </LayoutWrapper>
-  //     ),
-  //   },
-  //   {
-  //     path: "/profile",
-  //     element: (
-  //       <UsersRoute>
-  //         <LayoutWrapper>
-  //           <UserAccount />
-  //         </LayoutWrapper>
-  //       </UsersRoute>
-  //     ),
-  //   },
-  //   {
-  //     path: `/admin/*`,
-  //     element: (
-  //       <AdminRoute>
-  //         <LayoutWrapper>
-  //           <AdminDashboard />
-  //         </LayoutWrapper>
-  //       </AdminRoute>
-  //     ),
-  //   },
-  //   {
-  //     path: "*",
-  //     element: (
-  //       <LayoutWrapper>
-  //         <NotFound />
-  //       </LayoutWrapper>
-  //     ),
-  //   },
+  // 2. Админ панель (БЕЗ Хедера и Футера сайта)
+  // Мы вынесли это из children LayoutWrapper
+  {
+    path: "/admin",
+    element: <AdminLayout />, // Внутри AdminLayout свой хедер и сайдбар
+    children: [
+      {
+        index: true,
+        element: <AdminDashboardPage />,
+      },
+      {
+        path: "orders",
+        element: <OrdersListPage />,
+      },
+      {
+        path: "products",
+        element: <ProductListPage />,
+      },
+      {
+        path: "products/new", // Важно: new перед :id, иначе new воспримется как id
+        element: <ProductCreatePage />,
+      },
+      {
+        path: "products/:id/edit", // Или просто "update_product/:id", как у тебя было
+        element: <ProductEditPage />,
+      },
+      {
+        path: "categories",
+        element: <CategoriesListPage />,
+      },
+      {
+        path: "category/new", // Или "categories/new"
+        element: <CategoryCreatePage />,
+      },
+      {
+        path: "category/:id/edit", // Или "categories/:id/edit"
+        element: <CategoryEditPage />,
+      },
+      // Добавь сюда остальные админские маршруты...
+    ],
+  },
+
+  // 3. Страница 404 (Можно обернуть в LayoutWrapper, если нужно)
+  // {
+  //   path: "*",
+  //   element: (
+  //     <LayoutWrapper>
+  //       <NotFound />
+  //     </LayoutWrapper>
+  //   ),
+  // },
 ]);

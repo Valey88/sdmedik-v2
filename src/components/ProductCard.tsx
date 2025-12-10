@@ -21,7 +21,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
 
   return (
     <div
-      onClick={() => navigate(`/product/certificate/${product.id}`)}
+      onClick={() => navigate(`/product/${product.id}`)}
       className="group relative flex flex-col h-full bg-white rounded-xl border border-slate-200 overflow-hidden hover:border-[#00B3A4]/50 hover:shadow-lg transition-all duration-300 cursor-pointer"
     >
       {/* Бейджи */}
@@ -62,11 +62,6 @@ export const ProductCard = ({ product }: ProductCardProps) => {
           <div className="flex flex-col">
             {product.catalogs === 1 ? (
               <>
-                {product.old_price && (
-                  <span className="text-xs text-muted-foreground line-through decoration-red-400">
-                    {product.old_price.toLocaleString()} ₽
-                  </span>
-                )}
                 <span className="text-lg font-bold text-[#00B3A4]">
                   {Number(product.price).toLocaleString()} ₽
                 </span>
@@ -87,7 +82,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             style={{ background: secondaryGradient }}
             onClick={(e) => {
               e.stopPropagation();
-            //   onAddToCart(product.id);
+              //   onAddToCart(product.id);
             }}
           >
             <ShoppingCart className="h-4 w-4 text-white" />

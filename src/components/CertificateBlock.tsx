@@ -34,6 +34,10 @@ export default function CertificateBlock() {
                   background: secondaryGradient,
                 }}
                 aria-label="Каталог"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = "/catalog";
+                }}
               >
                 <span className="font-semibold">Смотреть каталог</span>
                 <ArrowRight
@@ -50,6 +54,10 @@ export default function CertificateBlock() {
                   background: "transparent",
                 }}
                 aria-label="Бесплатная консультация"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = "/certificate";
+                }}
               >
                 <span className="font-semibold">Подробнее о сертификате</span>
               </button>

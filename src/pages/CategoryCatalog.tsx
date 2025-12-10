@@ -1,6 +1,6 @@
 import { ArrowRight, Activity, Package } from "lucide-react";
 import { useCategories } from "../hooks/useCategories"; // Импорт нашего хука
-import { Category } from "@/interface/category";
+// import { Category } from "@/interface/category";
 import { urlPictures } from "@/config/Config";
 import { Link } from "react-router-dom";
 
@@ -12,17 +12,17 @@ export default function CategoryCatalog() {
     "linear-gradient(280.17deg, #00B3A4 -56.17%, #66D1C6 100%)";
 
   // Функция для получения картинки или заглушки
-  const getCategoryImage = (category: Category) => {
-    if (
-      category.images &&
-      category.images.length > 0 &&
-      category.images[0].url
-    ) {
-      return category.images[0].url;
-    }
-    // Заглушка, если картинки нет (можно заменить на свой плейсхолдер)
-    return "/placeholder-medical.png";
-  };
+  // const getCategoryImage = (category: Category) => {
+  //   if (
+  //     category.images &&
+  //     category.images.length > 0 &&
+  //     category.images[0].url
+  //   ) {
+  //     return category.images[0].url;
+  //   }
+  //   // Заглушка, если картинки нет (можно заменить на свой плейсхолдер)
+  //   return "/placeholder-medical.png";
+  // };
 
   if (loading) {
     return (

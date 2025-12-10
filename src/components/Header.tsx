@@ -12,7 +12,6 @@ const Header = () => {
     { name: "Блог", href: "/blog" },
     { name: "Доставка", href: "/delivery" },
     { name: "Возврат", href: "/returnpolicy" },
-    { name: "О компании", href: "/about" },
     { name: "Контакты", href: "/contacts" },
   ];
 

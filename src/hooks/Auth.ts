@@ -189,7 +189,7 @@ export const useAuth = (): UseAuthReturn => {
   const onLogout = async () => {
     localStorage.removeItem("user");
     await useAuthStore.getState().logout();
-    navigate("/login");
+    navigate("/");
   };
 
   return {
